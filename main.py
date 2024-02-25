@@ -6,8 +6,69 @@ pygame.init()
 user32 = ctypes.windll.user32
 user32.SetProcessDPIAware()
 
+# Запис розмірів екрану у константи
 WIDTH, HEIGHT = user32.GetSystemMetrics(0), user32.GetSystemMetrics(0)
 SIZE = (WIDTH, HEIGHT)
+
+
+# Батьківський класс екрану
+class Screen():
+    # Створення об'єкту Screen
+    def __init__(self, window):
+        self.window = window
+
+        # Скорочення запису функції відмальовування елементів на екрані
+        self.blit = self.window.screen.blit
+
+    # Переключення екрану на цей
+    def change_screen(self):
+        self.window.draw = self.draw
+
+
+# Класс екрана головного меню
+class MenuScreen(Screen):
+    # Створення об'єкта MenuScreen
+    def __init__(self, window):
+        super().__init__(window)
+
+    # Відмальовування меню
+    def draw(self):
+        pass
+
+    # Обробник подій екрана
+    def events(self, event):
+        pass
+
+
+# Класс екрану налаштувань
+class SettingScreen(Screen):
+    # Створення об'єкта SettingScreen
+    def __init__(self, window):
+        super().__init__(window)
+
+    # Відмальовування налаштувань
+    def draw(self):
+        pass
+
+    # Обробник подій екрана
+    def events(self, event):
+        pass
+
+
+# Класс ігрового екрану
+class GameScreen(Screen):
+    # Створення об'єкта GameScreen
+    def __init__(self, window):
+        super().__init__(window)
+
+    # Відмальовування гри
+    def draw(self):
+        pass
+
+    # Обробник подій екрана
+    def events(self, event):
+        pass
+
 
 # Класс вікна
 class Window():
@@ -23,9 +84,14 @@ class Window():
         # Змінна яка відповідає за роботу програми
         self.is_running = True
 
-    # Відмальовування екрану
-    def draw(self):
-        pass
+        # Cтворення всіх екранів
+        self.menu_screen = MenuScreen(self)
+        self.game_screen = GameScreen(self)
+        self.setting_screen = SettingScreen(self)
+
+        # Назначення функцій відмальовування екрану та обробника подій (за замовчуванням - меню)
+        self.draw = self.menu_screen.draw
+        self.events = self.menu_screen.events
 
     # Оновлення екрану
     def update_screen(self):
@@ -48,6 +114,12 @@ while win.is_running == True:
         # Якщо закрито програму то вийти з головного ігрового циклу
         if event.type == pygame.QUIT:
             win.quit()
+
+        # Обробник подій поточного екрану
+        win.events(event)
+
+    # Відмальовування поточного екрану
+    win.draw() 
 
     # Оновлення екрану
     win.update_screen()
