@@ -13,7 +13,7 @@ SIZE = (WIDTH, HEIGHT)
 class Window():
     # Створення об'єкта Window
     def __init__(self):
-        # Створення екрану
+        # Створення екрану в повноекраному режимі
         self.screen = pygame.display.set_mode(SIZE, flags=pygame.FULLSCREEN)
 
         # Створення clock для встановлення частоти оновлення екрану та константи FPS
@@ -22,6 +22,10 @@ class Window():
 
         # Змінна яка відповідає за роботу програми
         self.is_running = True
+
+    # Відмальовування екрану
+    def draw(self):
+        pass
 
     # Оновлення екрану
     def update_screen(self):
