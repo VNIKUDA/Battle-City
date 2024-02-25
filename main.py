@@ -32,13 +32,26 @@ class MenuScreen(Screen):
     def __init__(self, window):
         super().__init__(window)
 
+        # Кнопка для запуску гри
+        self.start = Button(
+            'static/btn.png',
+            (0, 0),
+            (300, 50),
+            'Start'
+        )
+
+        self.start.add_observers_function(window.game_screen.change_screen)
+
     # Відмальовування меню
     def draw(self):
-        pass
+        self.start.draw(self)
 
     # Обробник подій екрана
     def events(self, event):
-        pass
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            x, y = event.pos
+            if self.start.rect.collidepoint(x, y):
+                self.start.notify_observers()
 
 
 # Класс екрану налаштувань
@@ -64,7 +77,7 @@ class GameScreen(Screen):
 
     # Відмальовування гри
     def draw(self):
-        pass
+        print('game')
 
     # Обробник подій екрана
     def events(self, event):

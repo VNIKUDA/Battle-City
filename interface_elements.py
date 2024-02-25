@@ -18,16 +18,43 @@ class GraphElement(ABC):
 # Класс кнопки
 class Button(GraphElement):
     # Cтворення об'єкта Button
-    def __init__(self, pos, filename):
+    def __init__(self, filename, pos, size, text = None):
         # Список функцій спостерігачів
         self.observers_functions = []
 
-        # Текстура кнопки
+        # Розмір та позиція кнопки
+        self.size = size
+        self.pos = pos
+
+        # Завантаження текстури кнопки та змінення її розміру
         self.image = pygame.image.load(filename)
+        self.image = pygame.transform.scale(self.image, self.size)
         
-        # Створення rect для відстеження натискання на цю кнопку та встановлення позиції rect-а
-        self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = pos
+        # Створення поле для відстеження натискання на цю кнопку
+        self.rect = pygame.Rect(self.pos, self.size)
+
+        # Текст кнопки (якщо не введено то None)
+        self.text = text
+
+    # Відмальовування кнопки
+    def draw(self, screen):
+        # Просто відмальовування кнопки
+        screen.blit(self.image, self.rect)
+
+        # Якщо в кнопці є текст
+        if self.text:
+            # Змінні для ширини, висоти та x, y координат
+            width, height = self.size
+            x0, y0 = self.pos
+            
+            # Створення зображення тексту
+            text = pygame.font.Font(None, 30).render(self.text, True, (0, 0, 0))
+
+            # Обчислення координат тексту (вирівнювання по центру)
+            pos = x0 + (width/2 - text.get_width()/2), y0 + (height/2 - text.get_height()/2)
+
+            # Відмальовування тексту
+            screen.blit(text, pos)
 
     # Додавання функції яка буде запущена при натискані на кнопку
     def add_observers_function(self, function):
