@@ -11,7 +11,7 @@ WIDTH, HEIGHT = user32.GetSystemMetrics(0), user32.GetSystemMetrics(0)
 SIZE = (WIDTH, HEIGHT)
 
 
-# Батьківський класс екрану
+# Батьківський класс екранів
 class Screen():
     # Створення об'єкту Screen
     def __init__(self, window):
