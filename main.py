@@ -1,5 +1,6 @@
 # Імпортування модулів
 import pygame, ctypes
+from interface_elements import Button
 pygame.init()
 
 # Отримання розмірів монітора
@@ -85,9 +86,9 @@ class Window():
         self.is_running = True
 
         # Cтворення всіх екранів
-        self.menu_screen = MenuScreen(self)
         self.game_screen = GameScreen(self)
         self.setting_screen = SettingScreen(self)
+        self.menu_screen = MenuScreen(self)
 
         # Назначення функцій відмальовування екрану та обробника подій (за замовчуванням - меню)
         self.draw = self.menu_screen.draw
