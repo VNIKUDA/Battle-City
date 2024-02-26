@@ -62,6 +62,7 @@ class MenuScreen(Screen):
             if self.start.rect.collidepoint(x, y):
                 self.start.notify_observers()
 
+            # Якщо натиснуто на вихід
             elif self.quit.rect.collidepoint(x, y):
                 self.quit.notify_observers()
 
