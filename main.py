@@ -8,9 +8,8 @@ user32 = ctypes.windll.user32
 user32.SetProcessDPIAware()
 
 # Запис розмірів екрану у константи
-WIDTH, HEIGHT = user32.GetSystemMetrics(0), user32.GetSystemMetrics(0)
+WIDTH, HEIGHT = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 SIZE = (WIDTH, HEIGHT)
-
 
 # Батьківський класс екранів
 class Screen():
@@ -32,26 +31,39 @@ class MenuScreen(Screen):
     def __init__(self, window):
         super().__init__(window)
 
-        # Кнопка для запуску гри
-        self.start = Button(
-            'static/btn.png',
-            (0, 0),
-            (300, 50),
-            'Start'
-        )
+        # Задній фон меню
+        self.bg = pygame.image.load('static/menu_bg.png')
+        self.bg = pygame.transform.scale(self.bg, SIZE)
 
+        # Кнопка для запуску гри та виходу з гри
+        self.start = Button('static/start.png', (30, 700), (425, 170))
+        self.quit = Button('static/quit.png', (30, 900), (375, 150))
+
+        # Додавання реакцію на натискання для кожної кнопки
         self.start.add_observers_function(window.game_screen.change_screen)
+        self.quit.add_observers_function(window.quit)
 
     # Відмальовування меню
     def draw(self):
+        # Відмальовування фона
+        self.blit(self.bg, (0, 0))
+
+        # Відмальовування кнопок
         self.start.draw(self)
+        self.quit.draw(self)
 
     # Обробник подій екрана
     def events(self, event):
+        # Якщо натиснута ліва кнопка миші
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
+
+            # Якщо натиснуто на старт
             if self.start.rect.collidepoint(x, y):
                 self.start.notify_observers()
+
+            elif self.quit.rect.collidepoint(x, y):
+                self.quit.notify_observers()
 
 
 # Класс екрану налаштувань
