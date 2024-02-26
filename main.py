@@ -1,6 +1,8 @@
-# Імпортування модулів
+# Імпортування модулів та класів
 import pygame, ctypes
 from interface_elements import Button
+from player import Player
+from map_elements import Map
 pygame.init()
 
 # Отримання розмірів монітора
