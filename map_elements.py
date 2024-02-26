@@ -24,7 +24,7 @@ class Block():
     # Відмальовування об'єкта
     def draw(self, screen):
         screen.blit(self.image, self.rect)
-        
+
 
 # Клас для завантаження та конвертування схеми мапи в об'єкт
 class Map():
@@ -34,12 +34,10 @@ class Map():
         with open(filename, 'r') as file:
             self.file = file.readlines()
 
-        # 
+        # Конвертування файлу в схему мапи
         self.map = [
             line.split()
             for line in self.file
         ]
 
-
-
-        
+        #         
