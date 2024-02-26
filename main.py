@@ -1,7 +1,6 @@
 # Імпортування модулів та класів
 import pygame, ctypes
 from interface_elements import Button
-from player import Player
 from map_elements import Map
 pygame.init()
 
@@ -22,7 +21,7 @@ class Screen():
         # Скорочення запису функції відмальовування елементів на екрані
         self.blit = self.window.screen.blit
 
-    # Переключення екрану на цей
+    # Переключення поточного екрану на цей
     def change_screen(self):
         self.window.draw = self.draw
 
