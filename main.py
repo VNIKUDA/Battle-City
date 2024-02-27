@@ -1,7 +1,8 @@
 # Імпортування модулів та класів
 import pygame, ctypes
-from interface_elements import Button
+from interface_elements import Button, Image
 from map_elements import Map
+from player import Player
 pygame.init()
 
 # Отримання розмірів монітора
@@ -24,6 +25,7 @@ class Screen():
     # Переключення поточного екрану на цей
     def change_screen(self):
         self.window.draw = self.draw
+        self.window.events = self.events
 
 
 # Класс екрана головного меню
@@ -33,8 +35,9 @@ class MenuScreen(Screen):
         super().__init__(window)
 
         # Задній фон меню
-        self.bg = pygame.image.load('static/menu_bg.png')
-        self.bg = pygame.transform.scale(self.bg, SIZE)
+        self.bg = Image('static/menu_bg.png', (0, 0), SIZE)
+
+        self.logo = Image('static/logo.png', (10, -30), (300, 400))
 
         # Кнопка для запуску гри та виходу з гри
         self.start = Button('static/start.png', (30, 700), (425, 170))
@@ -47,7 +50,10 @@ class MenuScreen(Screen):
     # Відмальовування меню
     def draw(self):
         # Відмальовування фона
-        self.blit(self.bg, (0, 0))
+        self.bg.draw(self)
+
+        # Відмальовування лого
+        self.logo.draw(self)
 
         # Відмальовування кнопок
         self.start.draw(self)
@@ -89,13 +95,15 @@ class GameScreen(Screen):
     def __init__(self, window):
         super().__init__(window)
 
+        self.player = Player('static/E-100_preview.png', (0, 0), (50, 100))
+
     # Відмальовування гри
     def draw(self):
-        print('game')
+        self.player.update(self)
 
     # Обробник подій екрана
     def events(self, event):
-        pass
+        self.player.interact(event)
 
 
 # Класс вікна
@@ -142,6 +150,7 @@ while win.is_running == True:
         # Якщо закрито програму то вийти з головного ігрового циклу
         if event.type == pygame.QUIT:
             win.quit()
+
 
         # Обробник подій поточного екрану
         win.events(event)

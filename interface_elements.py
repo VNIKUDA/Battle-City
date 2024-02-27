@@ -2,7 +2,7 @@
 import pygame
 from abc import ABC, abstractmethod
 
-# Класс графічного елемента (абстрактний класс для всіх графічних елементів)
+# Класс графічного елемента (абстрактний класс для всіх інтерактивних елементів)
 class GraphElement(ABC):
     # Абстрактний метод який додає функцію спостерігача
     @abstractmethod
@@ -15,6 +15,23 @@ class GraphElement(ABC):
         pass
 
 
+# Класс картинки
+class Image():
+    # Створення об'єкта Image
+    def __init__(self, filename, pos, size):
+        # Розмір та позиція картинки
+        self.pos = pos
+        self.size = size
+
+        # Завантажування картинка та вставновлення її розміру
+        self.image = pygame.image.load(filename)
+        self.image = pygame.transform.scale(self.image, self.size)
+
+
+    # Відмальовування картинки
+    def draw(self, screen):
+        screen.blit(self.image, self.pos)
+
 # Класс кнопки
 class Button(GraphElement):
     # Cтворення об'єкта Button
@@ -26,9 +43,8 @@ class Button(GraphElement):
         self.size = size
         self.pos = pos
 
-        # Завантаження текстури кнопки та змінення її розміру
-        self.image = pygame.image.load(filename)
-        self.image = pygame.transform.scale(self.image, self.size)
+        # Текстура кнопки
+        self.image = Image(filename, self.pos, self.size)
         
         # Створення поле для відстеження натискання на цю кнопку
         self.rect = pygame.Rect(self.pos, self.size)
@@ -39,7 +55,7 @@ class Button(GraphElement):
     # Відмальовування кнопки
     def draw(self, screen):
         # Просто відмальовування кнопки
-        screen.blit(self.image, self.rect)
+        self.image.draw(screen)
 
         # Якщо в кнопці є текст
         if self.text:
