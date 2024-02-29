@@ -107,10 +107,15 @@ class GameScreen(Screen):
 
     # Відмальовування гри
     def draw(self):
+        # Оновлення гравця (переміщення та поворот) та перевірка колізії
+        self.player.update()
+        self.map.collision(self.player)
+
+        # Відмальовування фону, мапи та персонажа
         self.bg.draw(self)
         self.map.draw(self)
+        self.player.draw(self)
 
-        self.player.update(self)
 
     # Обробник подій екрана
     def events(self, event):
@@ -126,7 +131,7 @@ class Window():
 
         # Створення clock для встановлення частоти оновлення екрану та константи FPS
         self.clock = pygame.time.Clock()
-        self.FPS = 120
+        self.FPS = 60
 
         # Змінна яка відповідає за роботу програми
         self.is_running = True

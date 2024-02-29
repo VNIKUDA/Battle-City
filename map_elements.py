@@ -37,15 +37,39 @@ class Map():
             for line in self.file
         ]
 
+        # Створення об'єктів (перешкод) в мапі
         self.map = [
-            Block('static/block.png', (x*150 + 70, y*150 + 15), (150, 150))
+            Block('static/block.png', (x*150 + 60, y*150 + 15), (150, 150))
 
             for y, line in enumerate(self.map)
             for x, elem in enumerate(line)
 
-            if elem != '.'
+            if elem != '.' # "." = пропуск
         ]
 
+
+    # Колізія перешкод з гравцем
+    def collision(self, player):
+        # Перевірка колізії для кожної перешкоди
+        collided = [
+            block
+            for block in self.map
+            if (block.rect.collidepoint(player.front) and player.is_colliding == False) or (block.rect.collidepoint(player.back) and player.is_colliding == False)
+        ]
+
+        
+        # Якщо колізія відбулась то дати зворотній напрям танку
+        if collided != []:
+            player.drive_direction *= -1
+
+            player.is_colliding = True
+            player.is_driving = True
+
+
+        else:
+            player.is_colliding = False
+
+        
 
     # Відмальовування карти
     def draw(self, screen):

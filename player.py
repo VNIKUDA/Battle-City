@@ -40,6 +40,9 @@ class Player():
         # Катринка гравця
         self.image = self.texture
 
+        # Розмір картинки (для виправлення багу при повороті)
+        self.size = self.image.get_size()
+
         # Кут повороту, напрям повороту
         self.angle = 0
         self.rotate_direction = 1
@@ -50,6 +53,15 @@ class Player():
         self.drive_direction = 1
         self.is_driving = False # їздить
 
+        # Перед та зад танка для перевірки колізії з перешкодами
+        x, y = self.pos
+        w, h = self.size
+        self.back = (x, y + h/2)
+        self.front = (x, y - h/2)
+
+        # Змінна яка перевіряє чи є колізія між гравцем та перешкодою на мапі
+        self.is_colliding = False
+
     # Взаємодія з гравцем
     def interact(self, event):
         if event.type == pygame.KEYDOWN:
@@ -58,13 +70,13 @@ class Player():
 
             # Рух гравця
             # Їздити вверх
-            if event.key == pygame.K_w and not self.is_rotating:
+            if event.key == pygame.K_w and (not self.is_rotating and not self.is_driving and not self.is_colliding):
                 self.drive_direction = 1
                 self.move()
                 self.is_driving = True
 
             # Їздити вниз
-            if event.key == pygame.K_s and not self.is_rotating:
+            if event.key == pygame.K_s and (not self.is_rotating and not self.is_driving and not self.is_colliding):
                 self.drive_direction = -1
                 self.move()
                 self.is_driving = True
@@ -72,13 +84,13 @@ class Player():
 
             # Поворот гравця
             # Поворот вліво
-            if event.key == pygame.K_a and not self.is_driving:
+            if event.key == pygame.K_a and (not self.is_rotating and not self.is_driving and not self.is_colliding):
                 self.rotate_direction = 1
                 self.rotate()
                 self.is_rotating = True
 
             # Поворот вправо
-            if event.key == pygame.K_d and not self.is_driving:
+            if event.key == pygame.K_d and (not self.is_rotating and not self.is_driving and not self.is_colliding):
                 self.rotate_direction = -1
                 self.rotate()
                 self.is_rotating = True
@@ -90,15 +102,22 @@ class Player():
         w, h = self.image.get_size()
         x, y = self.pos
 
+        self.size = self.image.get_size()
+
         # Вираховування позиції гравця з вирівнюванням по центру (для анімації повороту) 
         pos = x - w/2, y - h/2
 
         # Відмальовування текстури гравця
         screen.blit(self.image, pos)
+        pygame.draw.circle(screen.window.screen, (0, 0, 0), self.front, 2)
+        pygame.draw.circle(screen.window.screen, (0, 0, 0), self.back, 2)
 
 
     # Рух граіця
     def move(self):
+        x, y = self.pos
+        w, h = self.size
+
         # Визначення вектора руху
         # Якщо кут дорівнює нулю то вектор руху буде вверх
         if self.angle == 0:
@@ -133,7 +152,7 @@ class Player():
 
 
     # Оновлення персонажа (поворот, переміщення)
-    def update(self, screen):
+    def update(self):
         # Анімація повороту
         # Якщо при діленні поточного кута поворота на 90 результат має соті (тобто не ціле число)
         digits = str(round(module(self.angle / 90), 2))[2:4] # соті результату 
@@ -146,15 +165,40 @@ class Player():
         # Анімація руху
         # Якщо позиція гравця не вирівнина по сітці
         x, y = self.pos
+        w, h = self.size
+
+        # Колізія
+        if self.angle == 0:
+            # Колізія
+            self.back = (x, y + h/2 - self.speed/2)
+            self.front = (x, y - h/2 + self.speed/2)
+
+        # Якщо кут дорівнює -270 або 90 то вектор руху вліво
+        elif self.angle in (-270, 90):
+
+            # Колізія
+            self.back = (x + w/2 - self.speed/2, y)
+            self.front = (x - w/2 + self.speed/2, y)
+
+        # Якщо модуль кута дорівнює -180 то вектор руху вниз
+        elif module(self.angle) == 180:
+
+            # Колізія
+            self.back = (x, y - h/2 + self.speed/2)
+            self.front = (x, y + h/2 - self.speed/2)
+
+        # Якщо модуль кута дорівнює 90 то вектор руху вправо
+        elif self.angle in (-90, 270):
+            # Колізія
+            self.back = (x - w/2 + self.speed/2, y)
+            self.front = (x + w/2 - self.speed/2, y)
+
+        
 
         x_digits = str(round((x-135) / 150, 2))[-1]
         y_digits = str(round((y-90) / 150, 2))[-1]
 
-        if (x_digits != '0' or y_digits != '0') and self.is_driving:
+        if (x_digits != '0' or y_digits != '0') and (self.is_driving == True):
             self.move()
         else:
             self.is_driving = False
-
-
-        # Відмальовування текстури
-        self.draw(screen)
