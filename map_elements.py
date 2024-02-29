@@ -1,5 +1,6 @@
 # Імпорт модулів
 import pygame
+from interface_elements import Image
 
 
 # Клас для перешкод
@@ -11,19 +12,15 @@ class Block():
         self.size = size
 
         # Завантаження текстури перешкоди та встановлення розміру
-        self.image = pygame.image.load(filename)
-        self.image = pygame.transform.scale(self.image, self.size)
+        self.image = Image(filename, pos, size)
 
         # Хітбокс об'єкту
         self.rect = pygame.Rect(self.pos, self.size)
 
-        # Можливість розламування об'єкта через постріл
-        self.is_breakable = is_breakable
-
 
     # Відмальовування об'єкта
     def draw(self, screen):
-        screen.blit(self.image, self.rect)
+        self.image.draw(screen)
 
 
 # Клас для завантаження та конвертування схеми мапи в об'єкт
@@ -40,4 +37,17 @@ class Map():
             for line in self.file
         ]
 
-        #         
+        self.map = [
+            Block('static/block.png', (x*150 + 70, y*150 + 15), (150, 150))
+
+            for y, line in enumerate(self.map)
+            for x, elem in enumerate(line)
+
+            if elem != '.'
+        ]
+
+
+    # Відмальовування карти
+    def draw(self, screen):
+        for block in self.map:
+            block.draw(screen)

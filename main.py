@@ -9,9 +9,13 @@ pygame.init()
 user32 = ctypes.windll.user32
 user32.SetProcessDPIAware()
 
-# Запис розмірів екрану у константи
+# Запис розмірів монітора у константи
 WIDTH, HEIGHT = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 SIZE = (WIDTH, HEIGHT)
+
+# Один процент від ширини монітора
+PROCENT = WIDTH / 100
+
 
 # Батьківський класс екранів
 class Screen():
@@ -34,9 +38,8 @@ class MenuScreen(Screen):
     def __init__(self, window):
         super().__init__(window)
 
-        # Задній фон меню
+        # Задній фон меню та лого
         self.bg = Image('static/menu_bg.png', (0, 0), SIZE)
-
         self.logo = Image('static/logo.png', (10, -30), (300, 400))
 
         # Кнопка для запуску гри та виходу з гри
@@ -49,10 +52,8 @@ class MenuScreen(Screen):
 
     # Відмальовування меню
     def draw(self):
-        # Відмальовування фона
+        # Відмальовування фона та лого
         self.bg.draw(self)
-
-        # Відмальовування лого
         self.logo.draw(self)
 
         # Відмальовування кнопок
@@ -95,10 +96,20 @@ class GameScreen(Screen):
     def __init__(self, window):
         super().__init__(window)
 
-        self.player = Player('static/E-100_preview.png', (0, 0), (50, 100))
+        # Фон 
+        self.bg = Image('static/game_bg.png', (0, 0), SIZE)
+
+        # Гравець
+        self.player = Player('static/E-100_preview.png', (135, 90), (75, 150), 5)
+
+        # Мапа
+        self.map = Map('map.txt')
 
     # Відмальовування гри
     def draw(self):
+        self.bg.draw(self)
+        self.map.draw(self)
+
         self.player.update(self)
 
     # Обробник подій екрана
@@ -115,7 +126,7 @@ class Window():
 
         # Створення clock для встановлення частоти оновлення екрану та константи FPS
         self.clock = pygame.time.Clock()
-        self.FPS = 60
+        self.FPS = 120
 
         # Змінна яка відповідає за роботу програми
         self.is_running = True
@@ -128,6 +139,7 @@ class Window():
         # Назначення функцій відмальовування екрану та обробника подій (за замовчуванням - меню)
         self.draw = self.menu_screen.draw
         self.events = self.menu_screen.events
+
 
     # Оновлення екрану
     def update_screen(self):
