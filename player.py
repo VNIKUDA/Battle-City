@@ -17,17 +17,14 @@ def normalise_angle(angle):
 # Клас танка
 class Tank():
     # Створення об'єкта Tank
-    def __init__(self, filename, pos, size):
-        pass
-
-
-# Клас для гравця
-class Player():
-    # Створення об'єкта Player
-    def __init__(self, filename, pos, size, speed = 1):
+    def __init__(self, filename, pos, size, speed):
         # Розташування гравця та його розмір
         self.pos = pos
         self.size = size
+
+        # Життя та патрони гравця
+        self.health = 3
+        self.bullets = 3
 
         # Швидкість гравця
         self.speed = speed
@@ -61,57 +58,6 @@ class Player():
 
         # Змінна яка перевіряє чи є колізія між гравцем та перешкодою на мапі
         self.is_colliding = False
-
-    # Взаємодія з гравцем
-    def interact(self, event):
-        if event.type == pygame.KEYDOWN:
-            # Позиція гравця
-            x, y = self.pos
-
-            # Рух гравця
-            # Їздити вверх
-            if event.key == pygame.K_w and (not self.is_rotating and not self.is_driving and not self.is_colliding):
-                self.drive_direction = 1
-                self.move()
-                self.is_driving = True
-
-            # Їздити вниз
-            if event.key == pygame.K_s and (not self.is_rotating and not self.is_driving and not self.is_colliding):
-                self.drive_direction = -1
-                self.move()
-                self.is_driving = True
-
-
-            # Поворот гравця
-            # Поворот вліво
-            if event.key == pygame.K_a and (not self.is_rotating and not self.is_driving and not self.is_colliding):
-                self.rotate_direction = 1
-                self.rotate()
-                self.is_rotating = True
-
-            # Поворот вправо
-            if event.key == pygame.K_d and (not self.is_rotating and not self.is_driving and not self.is_colliding):
-                self.rotate_direction = -1
-                self.rotate()
-                self.is_rotating = True
-
-    
-    # Відмальовування гравця
-    def draw(self, screen):
-        # Розмір та позиція 
-        w, h = self.image.get_size()
-        x, y = self.pos
-
-        self.size = self.image.get_size()
-
-        # Вираховування позиції гравця з вирівнюванням по центру (для анімації повороту) 
-        pos = x - w/2, y - h/2
-
-        # Відмальовування текстури гравця
-        screen.blit(self.image, pos)
-        pygame.draw.circle(screen.window.screen, (0, 0, 0), self.front, 2)
-        pygame.draw.circle(screen.window.screen, (0, 0, 0), self.back, 2)
-
 
     # Рух граіця
     def move(self):
@@ -202,3 +148,76 @@ class Player():
             self.move()
         else:
             self.is_driving = False
+
+
+    # Відмальовування гравця
+    def draw_tank(self, screen):
+        # Розмір та позиція 
+        w, h = self.image.get_size()
+        x, y = self.pos
+
+        self.size = self.image.get_size()
+
+        # Вираховування позиції гравця з вирівнюванням по центру (для анімації повороту) 
+        pos = x - w/2, y - h/2
+
+        # Відмальовування текстури гравця
+        screen.blit(self.image, pos)
+
+# Клас для гравця
+class Player(Tank):
+    # Створення об'єкта Player
+    def __init__(self, filename, pos, size, speed):
+        super().__init__(filename, pos, size, speed)
+
+        # Текстурка хп
+        self.hp_texture = pygame.image.load('static/hp.png')
+        self.hp_texture = pygame.transform.scale(self.hp_texture, (50, 50))
+
+        # Текстура патронів
+        self.rockets_texture = pygame.image.load('static/rockets.png')
+        self.rockets_texture = pygame.transform.scale(self.rockets_texture, (100, 25))
+        self.rockets_texture = pygame.transform.rotozoom(self.rockets_texture, 45, 1)
+
+    # Взаємодія з гравцем
+    def interact(self, event):
+        if event.type == pygame.KEYDOWN:
+            # Позиція гравця
+            x, y = self.pos
+
+            # Рух гравця
+            # Їздити вверх
+            if event.key == pygame.K_w and (not self.is_rotating and not self.is_driving and not self.is_colliding):
+                self.drive_direction = 1
+                self.move()
+                self.is_driving = True
+
+            # Їздити вниз
+            if event.key == pygame.K_s and (not self.is_rotating and not self.is_driving and not self.is_colliding):
+                self.drive_direction = -1
+                self.move()
+                self.is_driving = True
+
+
+            # Поворот гравця
+            # Поворот вліво
+            if event.key == pygame.K_a and (not self.is_rotating and not self.is_driving and not self.is_colliding):
+                self.rotate_direction = 1
+                self.rotate()
+                self.is_rotating = True
+
+            # Поворот вправо
+            if event.key == pygame.K_d and (not self.is_rotating and not self.is_driving and not self.is_colliding):
+                self.rotate_direction = -1
+                self.rotate()
+                self.is_rotating = True
+
+
+    def draw(self, screen):
+        self.draw_tank(screen)
+
+        for x, i in enumerate(range(self.health)):
+            screen.blit(self.hp_texture, (30+x*75, 1000))
+
+        for x, index in enumerate(range(self.bullets)):
+            screen.blit(self.rockets_texture, (1650 + x*70, 980))
