@@ -2,7 +2,7 @@
 import pygame, ctypes
 from interface_elements import Button, Image
 from map_elements import Map
-from player import Player
+from player import Player, Bullet, Tank
 pygame.init()
 
 # Отримання розмірів монітора
@@ -100,7 +100,7 @@ class GameScreen(Screen):
         self.bg = Image('static/game_bg.png', (0, 0), SIZE)
 
         # Гравець
-        self.player = Player('static/E-100_preview.png', (135, 90), (75, 150), 5)
+        self.player = Player('static/E-100.png', (135+150*5, 90+150*3), (75, 150), 5)
 
         # Мапа
         self.map = Map('map.txt')
@@ -114,6 +114,11 @@ class GameScreen(Screen):
         # Відмальовування фону, мапи та персонажа
         self.bg.draw(self)
         self.map.draw(self)
+
+        for bullet in Bullet.bullets:
+            bullet.move()
+            bullet.draw(self)
+
         self.player.draw(self)
 
 
@@ -160,8 +165,6 @@ win = Window()
 
 # Головний ігровий цикл
 while win.is_running == True:
-    win.screen.fill((255, 255, 255))
-
     # Обробник подій
     for event in pygame.event.get():
         # Якщо закрито програму то вийти з головного ігрового циклу

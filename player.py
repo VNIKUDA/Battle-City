@@ -13,14 +13,55 @@ def normalise_angle(angle):
 
     return angle
 
+class Bullet():
+
+    bullets = []
+
+    def __init__(self, pos, size, tank):
+        self.pos = pos
+        self.size = size
+        self.direction = tank.vector
+        self.speed = tank.speed * 2
+
+        self.texture = pygame.image.load('static/rocket.png')
+        self.texture = pygame.transform.scale(self.texture, size)
+        self.texture = pygame.transform.rotozoom(self.texture, tank.angle, 1)
+
+        self.rect = pygame.Rect(self.pos, self.size)
+
+        Bullet.bullets.append(self)
+
+    def draw(self, screen):
+        screen.blit(self.texture, self.pos)
+
+    def move(self):
+        x, y = self.pos
+
+        x_offset, y_offset = self.direction
+
+        self.pos = x + x_offset, y + y_offset
+
+    def kill(self):
+        for tank in Tank.tanks:
+            if self.rect.colliderect(tank.rect):
+                Tank.tanks.remove(tank)
+                Bullet.bullets.remove(self)
+
+                del tank
+                del self
+
 
 # Клас танка
 class Tank():
+    tanks = []
     # Створення об'єкта Tank
     def __init__(self, filename, pos, size, speed):
         # Розташування гравця та його розмір
         self.pos = pos
         self.size = size
+
+        # Хітбокс
+        self.rect = pygame.Rect(self.pos, self.size)
 
         # Життя та патрони гравця
         self.health = 3
@@ -58,6 +99,8 @@ class Tank():
 
         # Змінна яка перевіряє чи є колізія між гравцем та перешкодою на мапі
         self.is_colliding = False
+
+        Tank.tanks.append(self)
 
     # Рух граіця
     def move(self):
@@ -113,6 +156,9 @@ class Tank():
         x, y = self.pos
         w, h = self.size
 
+        self.rect = pygame.Rect(self.pos, self.size)
+
+
         # Колізія
         if self.angle == 0:
             # Колізія
@@ -150,6 +196,10 @@ class Tank():
             self.is_driving = False
 
 
+    def shoot(self):
+        size = 25, 50
+        Bullet(self.pos, size, self)
+
     # Відмальовування гравця
     def draw_tank(self, screen):
         # Розмір та позиція 
@@ -185,6 +235,10 @@ class Player(Tank):
             # Позиція гравця
             x, y = self.pos
 
+            # Вистріл
+            if event.key == pygame.K_SPACE and (not self.is_rotating and not self.is_driving and not self.is_colliding):
+                self.shoot()
+
             # Рух гравця
             # Їздити вверх
             if event.key == pygame.K_w and (not self.is_rotating and not self.is_driving and not self.is_colliding):
@@ -217,7 +271,7 @@ class Player(Tank):
         self.draw_tank(screen)
 
         for x, i in enumerate(range(self.health)):
-            screen.blit(self.hp_texture, (30+x*75, 1000))
+            screen.blit(self.hp_texture, (1700 + x*70, 15))
 
         for x, index in enumerate(range(self.bullets)):
-            screen.blit(self.rockets_texture, (1650 + x*70, 980))
+            screen.blit(self.rockets_texture, (15+x*75, 5))
