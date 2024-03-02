@@ -1,6 +1,7 @@
 # Імпорт модулів
 import pygame
 from interface_elements import Image
+from player import Bullet
 
 
 # Клас для перешкод
@@ -26,7 +27,11 @@ class Block():
 # Клас для завантаження та конвертування схеми мапи в об'єкт
 class Map():
     # Створення об'єкта Map
-    def __init__(self, filename):
+    def __init__(self, filename, window_size):
+        # Розмір вікна
+        self.SIZE = window_size
+        self.WIDTH, self.HEIGHT = self.SIZE
+
         # Зчитування файлу з мапою
         with open(filename, 'r') as file:
             self.file = file.readlines()
@@ -47,25 +52,50 @@ class Map():
             if elem != '.' # "." = пропуск
         ]
 
+        # Кордони мапи
+        borders = [
+            Block('static/nothing.png', (0, 0), (self.WIDTH, 15)), # верхній блок мапи
+            Block('static/nothing.png', (0, 0), (60, self.HEIGHT)), # лівий блок мапи
+            Block('static/nothing.png', (0, self.HEIGHT - 15), (self.WIDTH, 15)), # нижній блок мапи
+            Block('static/nothing.png', (self.WIDTH - 60, 0), (60, self.HEIGHT)) # правий блок мапи
+        ]
+    
+        # Додання кордонів мапи до мапи
+        self.map = borders + self.map
+
 
     # Колізія перешкод з гравцем
     def collision(self, player):
         # Перевірка колізії для кожної перешкоди
-        collided = [
+        player_collided = [
             block
             for block in self.map
             if (block.rect.collidepoint(player.front) and player.is_colliding == False) or (block.rect.collidepoint(player.back) and player.is_colliding == False)
         ]
 
+        bullet_collided = [
+            bullet
+
+            for block in self.map
+            for bullet in Bullet.bullets
+
+            if block.rect.colliderect(bullet.rect)
+        ]
+
+
+        for bullet in bullet_collided:
+            Bullet.bullets.remove(bullet)
+            del bullet
+
         
         # Якщо колізія відбулась то дати зворотній напрям танку
-        if collided != []:
+        if player_collided != []:
             player.drive_direction *= -1
 
             player.is_colliding = True
             player.is_driving = True
 
-
+        # Якщо колізії не відбулось
         else:
             player.is_colliding = False
 

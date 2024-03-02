@@ -102,8 +102,10 @@ class GameScreen(Screen):
         # Гравець
         self.player = Player('static/E-100.png', (135+150*5, 90+150*3), (75, 150), 5)
 
+        Tank('static/Tiger-II.png', (135+150*5, 90), (75, 150), 5)
+
         # Мапа
-        self.map = Map('map.txt')
+        self.map = Map('map.txt', SIZE)
 
     # Відмальовування гри
     def draw(self):
@@ -115,11 +117,16 @@ class GameScreen(Screen):
         self.bg.draw(self)
         self.map.draw(self)
 
+        for tank in Tank.tanks:
+            tank.draw(self)
+        
+
         for bullet in Bullet.bullets:
             bullet.move()
+            bullet.kill()
             bullet.draw(self)
 
-        self.player.draw(self)
+        
 
 
     # Обробник подій екрана

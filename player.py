@@ -1,5 +1,6 @@
 # Імпорт модулів
 import pygame
+import time
 
 # Математичний модуль
 module = lambda num: num if num >= 0 else -num 
@@ -14,36 +15,48 @@ def normalise_angle(angle):
     return angle
 
 class Bullet():
-
     bullets = []
 
     def __init__(self, pos, size, tank):
         self.pos = pos
         self.size = size
-        self.direction = tank.vector
-        self.speed = tank.speed * 2
+
+        x_offset, y_offset = tank.vector
+        self.direction = (x_offset, y_offset) if tank.drive_direction == 1 else (-x_offset, -y_offset)
+
+        self.speed = tank.speed
+        self.tank = tank
 
         self.texture = pygame.image.load('static/rocket.png')
         self.texture = pygame.transform.scale(self.texture, size)
         self.texture = pygame.transform.rotozoom(self.texture, tank.angle, 1)
+
+        self.size = self.texture.get_size()
 
         self.rect = pygame.Rect(self.pos, self.size)
 
         Bullet.bullets.append(self)
 
     def draw(self, screen):
-        screen.blit(self.texture, self.pos)
+        x, y = self.pos
+        w, h = self.size
+
+        pos = x - w/2, y - h/2
+
+        screen.blit(self.texture, pos)
 
     def move(self):
         x, y = self.pos
 
         x_offset, y_offset = self.direction
 
-        self.pos = x + x_offset, y + y_offset
+        self.pos = x + (x_offset * self.speed), y + (y_offset * self.speed)
+
+        self.rect = pygame.Rect(self.pos, self.size)
 
     def kill(self):
         for tank in Tank.tanks:
-            if self.rect.colliderect(tank.rect):
+            if self.rect.colliderect(tank.rect) and tank != self.tank:
                 Tank.tanks.remove(tank)
                 Bullet.bullets.remove(self)
 
@@ -66,6 +79,9 @@ class Tank():
         # Життя та патрони гравця
         self.health = 3
         self.bullets = 3
+
+        # Перезарядка
+        self.recharge_tick = 0
 
         # Швидкість гравця
         self.speed = speed
@@ -112,17 +128,33 @@ class Tank():
         if self.angle == 0:
             self.vector = 0, -1 * (self.drive_direction * self.speed)
 
+            # Колізія
+            self.back = (x, y + h/2 - self.speed/2)
+            self.front = (x, y - h/2 + self.speed/2)
+
         # Якщо кут дорівнює -270 або 90 то вектор руху вліво
         elif self.angle in (-270, 90):
             self.vector = -1 * (self.drive_direction * self.speed), 0
+
+            # Колізія
+            self.back = (x + w/2 - self.speed/2, y)
+            self.front = (x - w/2 + self.speed/2, y)
 
         # Якщо модуль кута дорівнює -180 то вектор руху вниз
         elif module(self.angle) == 180:
             self.vector = 0, self.speed * self.drive_direction
 
+            # Колізія
+            self.back = (x, y - h/2 + self.speed/2)
+            self.front = (x, y + h/2 - self.speed/2)
+
         # Якщо модуль кута дорівнює 90 то вектор руху вправо
         elif self.angle in (-90, 270):
             self.vector = self.speed * self.drive_direction, 0
+
+            # Колізія
+            self.back = (x - w/2 + self.speed/2, y)
+            self.front = (x + w/2 - self.speed/2, y)
 
         # Позиція та вектор
         x, y = self.pos
@@ -142,6 +174,14 @@ class Tank():
 
     # Оновлення персонажа (поворот, переміщення)
     def update(self):
+        # Позиція та розмір
+        x, y = self.pos
+        w, h = self.size
+
+        # Оновлення хітбокса танку
+        self.rect = pygame.Rect(self.pos, self.size)
+        
+
         # Анімація повороту
         # Якщо при діленні поточного кута поворота на 90 результат має соті (тобто не ціле число)
         digits = str(round(module(self.angle / 90), 2))[2:4] # соті результату 
@@ -150,23 +190,18 @@ class Tank():
         else:
             self.is_rotating = False
 
-        
-        # Анімація руху
-        # Якщо позиція гравця не вирівнина по сітці
-        x, y = self.pos
-        w, h = self.size
-
-        self.rect = pygame.Rect(self.pos, self.size)
-
-
-        # Колізія
+        # Визначення вектора руху
+        # Якщо кут дорівнює нулю то вектор руху буде вверх
         if self.angle == 0:
+            self.vector = 0, -1 * (self.drive_direction * self.speed)
+
             # Колізія
             self.back = (x, y + h/2 - self.speed/2)
             self.front = (x, y - h/2 + self.speed/2)
 
         # Якщо кут дорівнює -270 або 90 то вектор руху вліво
         elif self.angle in (-270, 90):
+            self.vector = -1 * (self.drive_direction * self.speed), 0
 
             # Колізія
             self.back = (x + w/2 - self.speed/2, y)
@@ -174,6 +209,7 @@ class Tank():
 
         # Якщо модуль кута дорівнює -180 то вектор руху вниз
         elif module(self.angle) == 180:
+            self.vector = 0, self.speed * self.drive_direction
 
             # Колізія
             self.back = (x, y - h/2 + self.speed/2)
@@ -181,12 +217,15 @@ class Tank():
 
         # Якщо модуль кута дорівнює 90 то вектор руху вправо
         elif self.angle in (-90, 270):
+            self.vector = self.speed * self.drive_direction, 0
+
             # Колізія
             self.back = (x - w/2 + self.speed/2, y)
             self.front = (x + w/2 - self.speed/2, y)
 
         
-
+        # Анімація руху
+        # Якщо позиція гравця не вирівнина по сітці
         x_digits = str(round((x-135) / 150, 2))[-1]
         y_digits = str(round((y-90) / 150, 2))[-1]
 
@@ -196,12 +235,22 @@ class Tank():
             self.is_driving = False
 
 
+        # Перезарядка патронів
+        if self.bullets < 3:
+            self.recharge_tick += 0.012
+
+            if self.recharge_tick >= 1:
+                self.bullets += 1
+                self.recharge_tick = 0
+
+
     def shoot(self):
         size = 25, 50
         Bullet(self.pos, size, self)
+        self.bullets -= 1
 
     # Відмальовування гравця
-    def draw_tank(self, screen):
+    def draw(self, screen):
         # Розмір та позиція 
         w, h = self.image.get_size()
         x, y = self.pos
@@ -236,7 +285,7 @@ class Player(Tank):
             x, y = self.pos
 
             # Вистріл
-            if event.key == pygame.K_SPACE and (not self.is_rotating and not self.is_driving and not self.is_colliding):
+            if event.key == pygame.K_SPACE and (not self.is_rotating and not self.is_driving and not self.is_colliding) and self.bullets > 0:
                 self.shoot()
 
             # Рух гравця
@@ -266,12 +315,24 @@ class Player(Tank):
                 self.rotate()
                 self.is_rotating = True
 
-
+    # Відмальовування гравця
     def draw(self, screen):
-        self.draw_tank(screen)
+        # Розмір та позиція 
+        w, h = self.image.get_size()
+        x, y = self.pos
 
+        self.size = self.image.get_size()
+
+        # Вираховування позиції гравця з вирівнюванням по центру (для анімації повороту) 
+        pos = x - w/2, y - h/2
+
+        # Відмальовування текстури гравця
+        screen.blit(self.image, pos)
+
+        # Інтерфейс здоров'я
         for x, i in enumerate(range(self.health)):
             screen.blit(self.hp_texture, (1700 + x*70, 15))
 
+        # Інтерфейс патронів
         for x, index in enumerate(range(self.bullets)):
             screen.blit(self.rockets_texture, (15+x*75, 5))
