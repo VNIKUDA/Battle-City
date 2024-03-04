@@ -25,7 +25,7 @@ class Bullet():
         x_offset, y_offset = tank.vector
         self.direction = (x_offset, y_offset) if tank.drive_direction == 1 else (-x_offset, -y_offset)
 
-        self.speed = tank.speed * 2
+        self.x_speed, self.y_speed = tank.x_speed * 2, tank.y_speed * 2
         self.tank = tank
 
         self.texture = pygame.image.load('static/rocket.png').convert_alpha()
@@ -51,28 +51,33 @@ class Bullet():
 
         x_offset, y_offset = self.direction
 
-        self.pos = x + (x_offset * self.speed), y + (y_offset * self.speed)
+        self.pos = x + (x_offset * self.x_speed), y + (y_offset * self.y_speed)
 
         self.rect = pygame.Rect(self.pos, self.size)
 
     def kill(self):
         for tank in Tank.tanks:
             if self.rect.colliderect(tank.rect) and tank != self.tank:
-                Tank.tanks.remove(tank)
-                Bullet.bullets.remove(self)
+                tank.health -= 1
 
-                del tank
+                Bullet.bullets.remove(self)
                 del self
 
+                if tank.health == 0:
+                    Tank.tanks.remove(tank)
+                    del tank
+                    
 
 # Клас танка
 class Tank():
     tanks = []
     # Створення об'єкта Tank
-    def __init__(self, filename, pos, size, speed):
+    def __init__(self, filename, pos, size, speed, procents):
         # Розташування гравця та його розмір
         self.pos = pos
         self.size = size
+
+        self.width_procent, self.height_procent = procents
 
         # Хітбокс
         x, y = self.pos
@@ -80,16 +85,17 @@ class Tank():
         # self.block = Block('static/nothing.png', (x - w/2, y - h/2), self.size)
         self.rect = self.rect = pygame.Rect(self.pos, self.size)
 
-
-        # Життя та патрони гравця
-        self.health = 3
-        self.bullets = 3
+        # Життя та nпатрони танка
+        self.health = 1
+        self.bullets = 1
+        self.max_bullets = self.bullets
 
         # Перезарядка
         self.recharge_tick = 0
 
         # Швидкість гравця
         self.speed = speed
+        self.x_speed, self.y_speed = self.width_procent(speed/19.2), self.height_procent(speed/10.8)
 
         # Текстура гравця
         self.texture = pygame.image.load(filename).convert_alpha()
@@ -130,35 +136,35 @@ class Tank():
         # Визначення вектора руху
         # Якщо кут дорівнює нулю то вектор руху буде вверх
         if self.angle == 0:
-            self.vector = 0, -1 * (self.drive_direction * self.speed)
+            self.vector = 0, -1 * (self.drive_direction * self.y_speed)
 
             # Колізія
-            self.back = (x, y + h/2 - self.speed/2)
-            self.front = (x, y - h/2 + self.speed/2)
+            self.back = (x, y + h/2 - self.y_speed/2)
+            self.front = (x, y - h/2 + self.y_speed/2)
 
         # Якщо кут дорівнює -270 або 90 то вектор руху вліво
         elif self.angle in (-270, 90):
-            self.vector = -1 * (self.drive_direction * self.speed), 0
+            self.vector = -1 * (self.drive_direction * self.x_speed), 0
 
             # Колізія
-            self.back = (x + w/2 - self.speed/2, y)
-            self.front = (x - w/2 + self.speed/2, y)
+            self.back = (x + w/2 - self.x_speed/2, y)
+            self.front = (x - w/2 + self.x_speed/2, y)
 
         # Якщо модуль кута дорівнює -180 то вектор руху вниз
         elif module(self.angle) == 180:
-            self.vector = 0, self.speed * self.drive_direction
+            self.vector = 0, self.y_speed * self.drive_direction
 
             # Колізія
-            self.back = (x, y - h/2 + self.speed/2)
-            self.front = (x, y + h/2 - self.speed/2)
+            self.back = (x, y - h/2 + self.y_speed/2)
+            self.front = (x, y + h/2 - self.y_speed/2)
 
         # Якщо модуль кута дорівнює 90 то вектор руху вправо
         elif self.angle in (-90, 270):
-            self.vector = self.speed * self.drive_direction, 0
+            self.vector = self.x_speed * self.drive_direction, 0
 
             # Колізія
-            self.back = (x - w/2 + self.speed/2, y)
-            self.front = (x + w/2 - self.speed/2, y)
+            self.back = (x - w/2 + self.x_speed/2, y)
+            self.front = (x + w/2 - self.x_speed/2, y)
 
         # Позиція та вектор
         x, y = self.pos
@@ -197,41 +203,41 @@ class Tank():
         # Визначення вектора руху
         # Якщо кут дорівнює нулю то вектор руху буде вверх
         if self.angle == 0:
-            self.vector = 0, -1 * (self.drive_direction * self.speed)
+            self.vector = 0, -1 * (self.drive_direction * self.y_speed)
 
             # Колізія
-            self.back = (x, y + h/2 - self.speed/2)
-            self.front = (x, y - h/2 + self.speed/2)
+            self.back = (x, y + h/2 - self.y_speed/2)
+            self.front = (x, y - h/2 + self.y_speed/2)
 
         # Якщо кут дорівнює -270 або 90 то вектор руху вліво
         elif self.angle in (-270, 90):
-            self.vector = -1 * (self.drive_direction * self.speed), 0
+            self.vector = -1 * (self.drive_direction * self.x_speed), 0
 
             # Колізія
-            self.back = (x + w/2 - self.speed/2, y)
-            self.front = (x - w/2 + self.speed/2, y)
+            self.back = (x + w/2 - self.x_speed/2, y)
+            self.front = (x - w/2 + self.x_speed/2, y)
 
         # Якщо модуль кута дорівнює -180 то вектор руху вниз
         elif module(self.angle) == 180:
-            self.vector = 0, self.speed * self.drive_direction
+            self.vector = 0, self.y_speed * self.drive_direction
 
             # Колізія
-            self.back = (x, y - h/2 + self.speed/2)
-            self.front = (x, y + h/2 - self.speed/2)
+            self.back = (x, y - h/2 + self.y_speed/2)
+            self.front = (x, y + h/2 - self.y_speed/2)
 
         # Якщо модуль кута дорівнює 90 то вектор руху вправо
         elif self.angle in (-90, 270):
-            self.vector = self.speed * self.drive_direction, 0
+            self.vector = self.x_speed * self.drive_direction, 0
 
             # Колізія
-            self.back = (x - w/2 + self.speed/2, y)
-            self.front = (x + w/2 - self.speed/2, y)
+            self.back = (x - w/2 + self.x_speed/2, y)
+            self.front = (x + w/2 - self.x_speed/2, y)
 
         
         # Анімація руху
         # Якщо позиція гравця не вирівнина по сітці
-        x_digits = str(round((x-135) / 150, 2))[-1]
-        y_digits = str(round((y-90) / 150, 2))[-1]
+        x_digits = str(round((x-self.width_procent(7.03125)) / self.width_procent(7.8125), 2))[-1]
+        y_digits = str(round((y-self.height_procent(8.333333333333332)) / self.height_procent(13.888888888888888), 2))[-1]
 
         if (x_digits != '0' or y_digits != '0') and (self.is_driving == True):
             self.move()
@@ -240,8 +246,8 @@ class Tank():
 
 
         # Перезарядка патронів
-        if self.bullets < 3:
-            self.recharge_tick += 0.012
+        if self.bullets < self.max_bullets:
+            self.recharge_tick += 0.01
 
             if self.recharge_tick >= 1:
                 self.bullets += 1
@@ -249,9 +255,10 @@ class Tank():
 
 
     def shoot(self):
-        size = 25, 50
+        size = self.width_procent(1.3020833333333335), self.height_procent(4.62962962962963)
         Bullet(self.pos, size, self)
         self.bullets -= 1
+
 
     # Відмальовування гравця
     def draw(self, screen):
@@ -270,16 +277,21 @@ class Tank():
 # Клас для гравця
 class Player(Tank):
     # Створення об'єкта Player
-    def __init__(self, filename, pos, size, speed):
-        super().__init__(filename, pos, size, speed)
+    def __init__(self, filename, pos, size, speed, procents):
+        super().__init__(filename, pos, size, speed, procents)
+
+        # Життя та патрони гравця (їх більше ніж у ворогів)
+        self.health = 3
+        self.bullets = 3
+        self.max_bullets = self.bullets
 
         # Текстурка хп
         self.hp_texture = pygame.image.load('static/hp.png').convert_alpha()
-        self.hp_texture = pygame.transform.scale(self.hp_texture, (50, 50))
+        self.hp_texture = pygame.transform.scale(self.hp_texture, (self.width_procent(2.604166666666667), self.height_procent(4.62962962962963)))
 
         # Текстура патронів
         self.rockets_texture = pygame.image.load('static/rockets.png').convert_alpha()
-        self.rockets_texture = pygame.transform.scale(self.rockets_texture, (100, 25))
+        self.rockets_texture = pygame.transform.scale(self.rockets_texture, (self.width_procent(5.208333333333334), self.height_procent(2.314814814814815)))
         self.rockets_texture = pygame.transform.rotozoom(self.rockets_texture, 45, 1)
 
     # Взаємодія з гравцем
@@ -335,8 +347,8 @@ class Player(Tank):
 
         # Інтерфейс здоров'я
         for x, i in enumerate(range(self.health)):
-            screen.blit(self.hp_texture, (1700 + x*70, 15))
+            screen.blit(self.hp_texture, (self.width_procent(99.47916666666667) - x*self.width_procent(3.6458333333333335)  - self.width_procent(2.604166666666667), self.height_procent(1.3888888888888888)))
 
         # Інтерфейс патронів
         for x, index in enumerate(range(self.bullets)):
-            screen.blit(self.rockets_texture, (15+x*75, 5))
+            screen.blit(self.rockets_texture, (self.width_procent(0.78125) + x*self.width_procent(3.90625), self.height_procent(0.4629629629629629)))

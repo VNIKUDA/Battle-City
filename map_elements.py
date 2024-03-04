@@ -8,7 +8,7 @@ pygame.init()
 # Клас для перешкод
 class Block():
     # Створення об'єкта Block
-    def __init__(self, filename, pos, size, is_breakable = False):
+    def __init__(self, filename, pos, size):
         # Позиція та розмір перешкоди
         self.pos = pos
         self.size = size
@@ -28,10 +28,13 @@ class Block():
 # Клас для завантаження та конвертування схеми мапи в об'єкт
 class Map():
     # Створення об'єкта Map
-    def __init__(self, filename, window_size):
+    def __init__(self, filename, window_size, procents):
         # Розмір вікна
         self.SIZE = window_size
         self.WIDTH, self.HEIGHT = self.SIZE
+
+        # Проценти від ширини та висоти вікна
+        width_procent, height_procent = procents
 
         # Зчитування файлу з мапою
         with open(filename, 'r') as file:
@@ -45,7 +48,7 @@ class Map():
 
         # Створення об'єктів (перешкод) в мапі
         self.map = [
-            Block('static/block.png', (x*150 + 60, y*150 + 15), (150, 150))
+            Block('static/block.png', (x*width_procent(7.8125) + width_procent(3.125), y*height_procent(13.888888888888888) + height_procent(1.3888888888888888)), (width_procent(7.8125), height_procent(13.888888888888888)))
 
             for y, line in enumerate(self.map)
             for x, elem in enumerate(line)
@@ -55,10 +58,10 @@ class Map():
 
         # Кордони мапи
         borders = [
-            Block('static/nothing.png', (0, 0), (self.WIDTH, 15)), # верхній блок мапи
-            Block('static/nothing.png', (0, 0), (60, self.HEIGHT)), # лівий блок мапи
-            Block('static/nothing.png', (0, self.HEIGHT - 15), (self.WIDTH, 15)), # нижній блок мапи
-            Block('static/nothing.png', (self.WIDTH - 60, 0), (60, self.HEIGHT)) # правий блок мапи
+            Block('static/nothing.png', (0, 0), (self.WIDTH, height_procent(1.3888888888888888))), # верхній блок мапи
+            Block('static/nothing.png', (0, 0), (width_procent(3.125), self.HEIGHT)), # лівий блок мапи
+            Block('static/nothing.png', (0, self.HEIGHT - height_procent(1.3888888888888888)), (self.WIDTH, height_procent(1.3888888888888888))), # нижній блок мапи
+            Block('static/nothing.png', (self.WIDTH - width_procent(3.125), 0), (width_procent(3.125), self.HEIGHT)) # правий блок мапи
         ]
     
         # Додання кордонів мапи до мапи
@@ -92,15 +95,14 @@ class Map():
         # Якщо колізія відбулась то дати зворотній напрям танку
         if player_collided != []:
             player.drive_direction *= -1
+            player.move()
 
             player.is_colliding = True
-            player.is_driving = True
 
         # Якщо колізії не відбулось
         else:
             player.is_colliding = False
-
-        
+       
 
     # Відмальовування карти
     def draw(self, screen):

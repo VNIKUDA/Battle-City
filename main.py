@@ -13,8 +13,9 @@ user32.SetProcessDPIAware()
 WIDTH, HEIGHT = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
 SIZE = (WIDTH, HEIGHT)
 
-# Один процент від ширини монітора
-PROCENT = WIDTH / 100
+# Проценти в пікселі
+width_procent = lambda num: num * WIDTH/100
+height_procent = lambda num: num * HEIGHT/100
 
 # Дозволенні взаємодії з програмою (для оптимізації)
 allowed_events = [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN, pygame.QUIT]
@@ -43,11 +44,11 @@ class MenuScreen(Screen):
 
         # Задній фон меню та лого
         self.bg = Image('static/menu_bg.png', (0, 0), SIZE)
-        self.logo = Image('static/logo.png', (10, -30), (300, 400))
+        self.logo = Image('static/logo.png', (width_procent(0.5208333333333334), height_procent(-2.7777777777777777)), (width_procent(15.625), height_procent(37.03703703703704)))
 
         # Кнопка для запуску гри та виходу з гри
-        self.start = Button('static/start.png', (30, 700), (425, 170))
-        self.quit = Button('static/quit.png', (30, 900), (375, 150))
+        self.start = Button('static/start.png', (width_procent(1.5625), height_procent(64.81481481481481)), (width_procent(22.135416666666668), height_procent(15.74074074074074)))
+        self.quit = Button('static/quit.png', (width_procent(1.5625), height_procent(83.33333333333333)), (width_procent(19.53125), height_procent(13.888888888888888)))
 
         # Додавання реакцію на натискання для кожної кнопки
         self.start.add_observers_function(window.game_screen.change_screen)
@@ -103,12 +104,12 @@ class GameScreen(Screen):
         self.bg = Image('static/game_bg.png', (0, 0), SIZE)
 
         # Гравець
-        self.player = Player('static/E-100.png', (135+150*5, 90+150*3), (75, 150), 3.75)
+        self.player = Player('static/E-100.png', (width_procent(46.09375), height_procent(50)), (width_procent(3.90625), height_procent(13.888888888888888)), 3.75, (width_procent, height_procent))
 
-        Tank('static/Tiger-II.png', (135+150*5, 90), (75, 150), 3)
+        Tank('static/Tiger-II.png', (width_procent(46.09375), height_procent(8.333333333333332)), (width_procent(3.90625), height_procent(13.88888888888889)), 3, (width_procent, height_procent))
 
         # Мапа
-        self.map = Map('map.txt', SIZE)
+        self.map = Map('map.txt', SIZE, (width_procent, height_procent))
 
 
     # Відмальовування гри
@@ -128,7 +129,7 @@ class GameScreen(Screen):
 
         for tank in tanks:
             tank.draw(self)
-            tank.rotate()
+            
 
         for bullet in Bullet.bullets:
             bullet.move()
@@ -146,7 +147,7 @@ class Window():
     # Створення об'єкта Window
     def __init__(self):
         # Створення екрану в повноекраному режимі
-        self.screen = pygame.display.set_mode(SIZE, flags=pygame.FULLSCREEN)
+        self.screen = pygame.display.set_mode(SIZE, flags = pygame.FULLSCREEN | pygame.DOUBLEBUF)
 
         # Створення clock для встановлення частоти оновлення екрану та константи FPS
         self.clock = pygame.time.Clock()
