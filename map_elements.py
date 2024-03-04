@@ -2,6 +2,7 @@
 import pygame
 from interface_elements import Image
 from player import Bullet
+pygame.init()
 
 
 # Клас для перешкод

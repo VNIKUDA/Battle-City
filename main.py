@@ -16,6 +16,9 @@ SIZE = (WIDTH, HEIGHT)
 # Один процент від ширини монітора
 PROCENT = WIDTH / 100
 
+# Дозволенні взаємодії з програмою (для оптимізації)
+allowed_events = [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN, pygame.QUIT]
+pygame.event.set_allowed(allowed_events)
 
 # Батьківський класс екранів
 class Screen():
@@ -100,12 +103,13 @@ class GameScreen(Screen):
         self.bg = Image('static/game_bg.png', (0, 0), SIZE)
 
         # Гравець
-        self.player = Player('static/E-100.png', (135+150*5, 90+150*3), (75, 150), 5)
+        self.player = Player('static/E-100.png', (135+150*5, 90+150*3), (75, 150), 3.75)
 
-        Tank('static/Tiger-II.png', (135+150*5, 90), (75, 150), 5)
+        Tank('static/Tiger-II.png', (135+150*5, 90), (75, 150), 3)
 
         # Мапа
         self.map = Map('map.txt', SIZE)
+
 
     # Відмальовування гри
     def draw(self):
@@ -117,16 +121,19 @@ class GameScreen(Screen):
         self.bg.draw(self)
         self.map.draw(self)
 
-        for tank in Tank.tanks:
+        self.player.draw(self)
+
+        tanks = Tank.tanks[:]
+        tanks.remove(self.player)
+
+        for tank in tanks:
             tank.draw(self)
-        
+            tank.rotate()
 
         for bullet in Bullet.bullets:
             bullet.move()
             bullet.kill()
             bullet.draw(self)
-
-        
 
 
     # Обробник подій екрана
@@ -163,6 +170,8 @@ class Window():
         pygame.display.update()
         self.clock.tick(self.FPS)
 
+        pygame.display.set_caption(str(self.clock.get_fps()))
+
     # Закриття вікна
     def quit(self):
         self.is_running = False
@@ -178,9 +187,9 @@ while win.is_running == True:
         if event.type == pygame.QUIT:
             win.quit()
 
-
         # Обробник подій поточного екрану
         win.events(event)
+
 
     # Відмальовування поточного екрану
     win.draw() 

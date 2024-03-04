@@ -1,6 +1,7 @@
 # Імпорт модулів
 import pygame
 import time
+pygame.init()
 
 # Математичний модуль
 module = lambda num: num if num >= 0 else -num 
@@ -24,10 +25,10 @@ class Bullet():
         x_offset, y_offset = tank.vector
         self.direction = (x_offset, y_offset) if tank.drive_direction == 1 else (-x_offset, -y_offset)
 
-        self.speed = tank.speed
+        self.speed = tank.speed * 2
         self.tank = tank
 
-        self.texture = pygame.image.load('static/rocket.png')
+        self.texture = pygame.image.load('static/rocket.png').convert_alpha()
         self.texture = pygame.transform.scale(self.texture, size)
         self.texture = pygame.transform.rotozoom(self.texture, tank.angle, 1)
 
@@ -74,7 +75,11 @@ class Tank():
         self.size = size
 
         # Хітбокс
-        self.rect = pygame.Rect(self.pos, self.size)
+        x, y = self.pos
+        w, h = self.size
+        # self.block = Block('static/nothing.png', (x - w/2, y - h/2), self.size)
+        self.rect = self.rect = pygame.Rect(self.pos, self.size)
+
 
         # Життя та патрони гравця
         self.health = 3
@@ -87,7 +92,7 @@ class Tank():
         self.speed = speed
 
         # Текстура гравця
-        self.texture = pygame.image.load(filename)
+        self.texture = pygame.image.load(filename).convert_alpha()
         self.texture = pygame.transform.scale(self.texture, size)
         self.texture = pygame.transform.rotozoom(self.texture, 180, 1)
 
@@ -108,8 +113,7 @@ class Tank():
         self.is_driving = False # їздить
 
         # Перед та зад танка для перевірки колізії з перешкодами
-        x, y = self.pos
-        w, h = self.size
+        
         self.back = (x, y + h/2)
         self.front = (x, y - h/2)
 
@@ -270,11 +274,11 @@ class Player(Tank):
         super().__init__(filename, pos, size, speed)
 
         # Текстурка хп
-        self.hp_texture = pygame.image.load('static/hp.png')
+        self.hp_texture = pygame.image.load('static/hp.png').convert_alpha()
         self.hp_texture = pygame.transform.scale(self.hp_texture, (50, 50))
 
         # Текстура патронів
-        self.rockets_texture = pygame.image.load('static/rockets.png')
+        self.rockets_texture = pygame.image.load('static/rockets.png').convert_alpha()
         self.rockets_texture = pygame.transform.scale(self.rockets_texture, (100, 25))
         self.rockets_texture = pygame.transform.rotozoom(self.rockets_texture, 45, 1)
 

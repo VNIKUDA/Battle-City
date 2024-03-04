@@ -1,6 +1,7 @@
 # Імпорт модулів
 import pygame
 from abc import ABC, abstractmethod
+pygame.init()
 
 # Класс графічного елемента (абстрактний класс для всіх інтерактивних елементів)
 class GraphElement(ABC):
@@ -24,7 +25,7 @@ class Image():
         self.size = size
 
         # Завантажування картинка та вставновлення її розміру
-        self.image = pygame.image.load(filename)
+        self.image = pygame.image.load(filename).convert_alpha()
         self.image = pygame.transform.scale(self.image, self.size)
 
 
