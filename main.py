@@ -4,6 +4,7 @@ from interface_elements import Button, Image
 from map_elements import Map
 from player import Player, Bullet, Tank
 pygame.init()
+pygame.mixer.init()
 
 # Отримання розмірів монітора
 user32 = ctypes.windll.user32
@@ -43,12 +44,12 @@ class MenuScreen(Screen):
         super().__init__(window)
 
         # Задній фон меню та лого
-        self.bg = Image('static/menu_bg.png', (0, 0), SIZE)
-        self.logo = Image('static/logo.png', (width_procent(0.5208333333333334), height_procent(-2.7777777777777777)), (width_procent(15.625), height_procent(37.03703703703704)))
+        self.bg = Image('static/images/menu_bg.png', (0, 0), SIZE)
+        self.logo = Image('static/images/logo.png', (width_procent(0.5208333333333334), height_procent(-2.7777777777777777)), (width_procent(15.625), height_procent(37.03703703703704)))
 
         # Кнопка для запуску гри та виходу з гри
-        self.start = Button('static/start.png', (width_procent(1.5625), height_procent(64.81481481481481)), (width_procent(22.135416666666668), height_procent(15.74074074074074)))
-        self.quit = Button('static/quit.png', (width_procent(1.5625), height_procent(83.33333333333333)), (width_procent(19.53125), height_procent(13.888888888888888)))
+        self.start = Button('static/images/start.png', (width_procent(1.5625), height_procent(64.81481481481481)), (width_procent(22.135416666666668), height_procent(15.74074074074074)))
+        self.quit = Button('static/images/quit.png', (width_procent(1.5625), height_procent(83.33333333333333)), (width_procent(19.53125), height_procent(13.888888888888888)))
 
         # Додавання реакцію на натискання для кожної кнопки
         self.start.add_observers_function(window.game_screen.change_screen)
@@ -101,12 +102,12 @@ class GameScreen(Screen):
         super().__init__(window)
 
         # Фон 
-        self.bg = Image('static/game_bg.png', (0, 0), SIZE)
+        self.bg = Image('static/images/game_bg.png', (0, 0), SIZE)
 
         # Гравець
-        self.player = Player('static/E-100.png', (width_procent(46.09375), height_procent(50)), (width_procent(3.90625), height_procent(13.888888888888888)), 3.75, (width_procent, height_procent))
+        self.player = Player('static/images/E-100.png', (width_procent(46.09375), height_procent(50)), (width_procent(3.90625), height_procent(13.888888888888888)), 3.75, (width_procent, height_procent))
 
-        Tank('static/Tiger-II.png', (width_procent(46.09375), height_procent(8.333333333333332)), (width_procent(3.90625), height_procent(13.88888888888889)), 3, (width_procent, height_procent))
+        Tank('static/images/Tiger-II.png', (width_procent(46.09375), height_procent(8.333333333333332)), (width_procent(3.90625), height_procent(13.88888888888889)), 3, (width_procent, height_procent))
 
         # Мапа
         self.map = Map('map.txt', SIZE, (width_procent, height_procent))
@@ -152,6 +153,9 @@ class Window():
         # Створення clock для встановлення частоти оновлення екрану та константи FPS
         self.clock = pygame.time.Clock()
         self.FPS = 60
+
+        # Запускання фоновових звуких
+        pygame.mixer.Sound('static/sounds/background.mp3').play(-1).set_volume(0.1)
 
         # Змінна яка відповідає за роботу програми
         self.is_running = True

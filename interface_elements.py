@@ -2,6 +2,7 @@
 import pygame
 from abc import ABC, abstractmethod
 pygame.init()
+pygame.mixer.init()
 
 # Класс графічного елемента (абстрактний класс для всіх інтерактивних елементів)
 class GraphElement(ABC):
@@ -61,5 +62,6 @@ class Button(GraphElement):
 
     # Запуск функцій в self.observers_functions
     def notify_observers(self):
+        pygame.mixer.Sound('static/sounds/button-click.mp3').play().set_volume(0.1)
         for function in self.observers_functions:
             function()

@@ -48,7 +48,7 @@ class Map():
 
         # Створення об'єктів (перешкод) в мапі
         self.map = [
-            Block('static/block.png', (x*width_procent(7.8125) + width_procent(3.125), y*height_procent(13.888888888888888) + height_procent(1.3888888888888888)), (width_procent(7.8125), height_procent(13.888888888888888)))
+            Block('static/images/block.png', (x*width_procent(7.8125) + width_procent(3.125), y*height_procent(13.888888888888888) + height_procent(1.3888888888888888)), (width_procent(7.8125), height_procent(13.888888888888888)))
 
             for y, line in enumerate(self.map)
             for x, elem in enumerate(line)
@@ -58,10 +58,10 @@ class Map():
 
         # Кордони мапи
         borders = [
-            Block('static/nothing.png', (0, 0), (self.WIDTH, height_procent(1.3888888888888888))), # верхній блок мапи
-            Block('static/nothing.png', (0, 0), (width_procent(3.125), self.HEIGHT)), # лівий блок мапи
-            Block('static/nothing.png', (0, self.HEIGHT - height_procent(1.3888888888888888)), (self.WIDTH, height_procent(1.3888888888888888))), # нижній блок мапи
-            Block('static/nothing.png', (self.WIDTH - width_procent(3.125), 0), (width_procent(3.125), self.HEIGHT)) # правий блок мапи
+            Block('static/images/nothing.png', (0, 0), (self.WIDTH, height_procent(1.3888888888888888))), # верхній блок мапи
+            Block('static/images/nothing.png', (0, 0), (width_procent(3.125), self.HEIGHT)), # лівий блок мапи
+            Block('static/images/nothing.png', (0, self.HEIGHT - height_procent(1.3888888888888888)), (self.WIDTH, height_procent(1.3888888888888888))), # нижній блок мапи
+            Block('static/images/nothing.png', (self.WIDTH - width_procent(3.125), 0), (width_procent(3.125), self.HEIGHT)) # правий блок мапи
         ]
     
         # Додання кордонів мапи до мапи

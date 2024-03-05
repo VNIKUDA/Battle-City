@@ -2,9 +2,12 @@
 import pygame
 import time
 pygame.init()
+pygame.mixer.init()
+
+Sound = pygame.mixer.Sound
 
 # Математичний модуль
-module = lambda num: num if num >= 0 else -num 
+module = lambda num: num if num >= 0 else -num
 
 # Нормалізувати кут повороту (від -360 до 360)
 def normalise_angle(angle):
@@ -28,7 +31,7 @@ class Bullet():
         self.x_speed, self.y_speed = tank.x_speed * 2, tank.y_speed * 2
         self.tank = tank
 
-        self.texture = pygame.image.load('static/rocket.png').convert_alpha()
+        self.texture = pygame.image.load('static/images/rocket.png').convert_alpha()
         self.texture = pygame.transform.scale(self.texture, size)
         self.texture = pygame.transform.rotozoom(self.texture, tank.angle, 1)
 
@@ -60,6 +63,8 @@ class Bullet():
             if self.rect.colliderect(tank.rect) and tank != self.tank:
                 tank.health -= 1
 
+                Sound('static/sounds/boom.mp3').play().set_volume(0.4)
+
                 Bullet.bullets.remove(self)
                 del self
 
@@ -82,7 +87,7 @@ class Tank():
         # Хітбокс
         x, y = self.pos
         w, h = self.size
-        # self.block = Block('static/nothing.png', (x - w/2, y - h/2), self.size)
+        # self.block = Block('static/images/nothing.png', (x - w/2, y - h/2), self.size)
         self.rect = self.rect = pygame.Rect(self.pos, self.size)
 
         # Життя та nпатрони танка
@@ -132,6 +137,8 @@ class Tank():
     def move(self):
         x, y = self.pos
         w, h = self.size
+
+
 
         # Визначення вектора руху
         # Якщо кут дорівнює нулю то вектор руху буде вверх
@@ -250,11 +257,13 @@ class Tank():
             self.recharge_tick += 0.01
 
             if self.recharge_tick >= 1:
+                Sound('static/sounds/reload.wav').play().set_volume(0.3)
                 self.bullets += 1
                 self.recharge_tick = 0
 
 
     def shoot(self):
+        Sound('static/sounds/shoot.mp3').play().set_volume(0.5)
         size = self.width_procent(1.3020833333333335), self.height_procent(4.62962962962963)
         Bullet(self.pos, size, self)
         self.bullets -= 1
@@ -285,12 +294,20 @@ class Player(Tank):
         self.bullets = 3
         self.max_bullets = self.bullets
 
+        # Звук їзди гравця
+        self.driving_sound = Sound('static/sounds/driving.mp3')
+        self.driving_sound.set_volume(0.05)
+
+        # Звуки стояння
+        self.idle_sound = Sound('static/sounds/idle.mp3')
+        self.idle_sound.set_volume(0.2)
+
         # Текстурка хп
-        self.hp_texture = pygame.image.load('static/hp.png').convert_alpha()
+        self.hp_texture = pygame.image.load('static/images/hp.png').convert_alpha()
         self.hp_texture = pygame.transform.scale(self.hp_texture, (self.width_procent(2.604166666666667), self.height_procent(4.62962962962963)))
 
         # Текстура патронів
-        self.rockets_texture = pygame.image.load('static/rockets.png').convert_alpha()
+        self.rockets_texture = pygame.image.load('static/images/rockets.png').convert_alpha()
         self.rockets_texture = pygame.transform.scale(self.rockets_texture, (self.width_procent(5.208333333333334), self.height_procent(2.314814814814815)))
         self.rockets_texture = pygame.transform.rotozoom(self.rockets_texture, 45, 1)
 
@@ -299,6 +316,13 @@ class Player(Tank):
         if event.type == pygame.KEYDOWN:
             # Позиція гравця
             x, y = self.pos
+
+            # Звуки
+            # Якщо натиснуто вперед або назад + вправо та вліво
+            if event.key in (pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d) and not self.is_driving:
+                pygame.mixer.Sound.stop(self.idle_sound)
+                self.driving_sound.play()
+            
 
             # Вистріл
             if event.key == pygame.K_SPACE and (not self.is_rotating and not self.is_driving and not self.is_colliding) and self.bullets > 0:
@@ -330,6 +354,7 @@ class Player(Tank):
                 self.rotate_direction = -1
                 self.rotate()
                 self.is_rotating = True
+     
 
     # Відмальовування гравця
     def draw(self, screen):
@@ -344,6 +369,11 @@ class Player(Tank):
 
         # Відмальовування текстури гравця
         screen.blit(self.image, pos)
+
+        # Перевірка звуку їзди
+        if (self.is_driving == False and self.is_rotating == False) and self.idle_sound.get_num_channels() == 0: 
+            pygame.mixer.Sound.stop(self.driving_sound)
+            self.idle_sound.play(-1, fade_ms=10)
 
         # Інтерфейс здоров'я
         for x, i in enumerate(range(self.health)):
