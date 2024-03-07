@@ -3,6 +3,7 @@ import pygame, ctypes
 from interface_elements import Button, Image
 from map_elements import Map
 from player import Player, Bullet, Tank
+from enemy import spawn_enemies
 pygame.init()
 pygame.mixer.init()
 
@@ -81,14 +82,14 @@ class MenuScreen(Screen):
 
 
 # Класс екрану налаштувань
-class SettingScreen(Screen):
-    # Створення об'єкта SettingScreen
+class EndScreen(Screen):
+    # Створення об'єкта EndScreen
     def __init__(self, window):
         super().__init__(window)
 
     # Відмальовування налаштувань
     def draw(self):
-        pass
+        self.window.screen.fill((255, 255, 255))
 
     # Обробник подій екрана
     def events(self, event):
@@ -107,7 +108,8 @@ class GameScreen(Screen):
         # Гравець
         self.player = Player('static/images/E-100.png', (width_procent(46.09375), height_procent(50)), (width_procent(3.90625), height_procent(13.888888888888888)), 3.75, (width_procent, height_procent))
 
-        Tank('static/images/Tiger-II.png', (width_procent(46.09375), height_procent(8.333333333333332)), (width_procent(3.90625), height_procent(13.88888888888889)), 3, (width_procent, height_procent))
+        # self.tank = Tank('static/images/Tiger-II.png', (width_procent(46.09375), height_procent(88.333333333333332)), (width_procent(3.90625), height_procent(13.88888888888889)), 3, (width_procent, height_procent))
+        # self.tank.update()
 
         # Мапа
         self.map = Map('map.txt', SIZE, (width_procent, height_procent))
@@ -115,26 +117,49 @@ class GameScreen(Screen):
 
     # Відмальовування гри
     def draw(self):
-        # Оновлення гравця (переміщення та поворот) та перевірка колізії
-        self.player.update()
-        self.map.collision(self.player)
+        tanks = Tank.tanks
+        # Якщо гравець живий
+        if self.player.health > 0:
+            # Спавн ворогів
+            spawn_enemies(self.map, self.player)
+
+            # Оновлення гравця (переміщення та поворот) та перевірка колізії
+            self.player.update()
+            self.map.collision(self.player)
+
+            # Тест смерті гравця
+            # if self.tank.bullets == 1:
+            #     self.tank.shoot()
+
+            # Оновлення танків крім гравця
+            tanks = tanks[:]
+            tanks.remove(self.player)
+            for tank in tanks:
+                tank.update()
+
+            # Оновлення пуль
+            for bullet in Bullet.bullets:
+                bullet.move()
+                bullet.kill()
+
+        # Якщо гравець мертвий та екран ще не помінятий
+        elif self.player.health == 0 and self.window.draw == self.draw:
+            self.window.draw = self.window.end_screen.draw
+            self.window.events = self.window.end_screen.events
 
         # Відмальовування фону, мапи та персонажа
         self.bg.draw(self)
         self.map.draw(self)
 
-        self.player.draw(self)
+        if self.player.health != 0:
+            self.player.draw(self)
 
-        tanks = Tank.tanks[:]
-        tanks.remove(self.player)
-
+        # Відмальовування танків
         for tank in tanks:
             tank.draw(self)
-            
 
+        # Відмальовування пуль
         for bullet in Bullet.bullets:
-            bullet.move()
-            bullet.kill()
             bullet.draw(self)
 
 
@@ -155,14 +180,14 @@ class Window():
         self.FPS = 60
 
         # Запускання фоновових звуких
-        pygame.mixer.Sound('static/sounds/background.mp3').play(-1).set_volume(0.1)
+        pygame.mixer.Sound('static\\sounds\\background.mp3').play(-1).set_volume(0.1)
 
         # Змінна яка відповідає за роботу програми
         self.is_running = True
 
         # Cтворення всіх екранів
         self.game_screen = GameScreen(self)
-        self.setting_screen = SettingScreen(self)
+        self.end_screen = EndScreen(self)
         self.menu_screen = MenuScreen(self)
 
         # Назначення функцій відмальовування екрану та обробника подій (за замовчуванням - меню)

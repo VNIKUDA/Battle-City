@@ -1,6 +1,5 @@
 # Імпорт модулів
 import pygame
-import time
 pygame.init()
 pygame.mixer.init()
 
@@ -18,59 +17,94 @@ def normalise_angle(angle):
 
     return angle
 
+# Класс снаряда
 class Bullet():
+    # Список патронів
     bullets = []
 
+    # Створення об'єкта Bullet
     def __init__(self, pos, size, tank):
+        # Позиція та розмір снаряда
         self.pos = pos
         self.size = size
 
+        # Вектор руху снаряда та її швидкість
         x_offset, y_offset = tank.vector
         self.direction = (x_offset, y_offset) if tank.drive_direction == 1 else (-x_offset, -y_offset)
-
         self.x_speed, self.y_speed = tank.x_speed * 2, tank.y_speed * 2
+
+        # Танк який вистрілив
         self.tank = tank
 
+        # Текстура снаряда
         self.texture = pygame.image.load('static/images/rocket.png').convert_alpha()
         self.texture = pygame.transform.scale(self.texture, size)
         self.texture = pygame.transform.rotozoom(self.texture, tank.angle, 1)
 
+        # Оновлений розмір (через поворот текстури)
         self.size = self.texture.get_size()
 
+        # Хітбокс
         self.rect = pygame.Rect(self.pos, self.size)
 
+        # Звук вибуху
+        self.boom_sound = Sound('static/sounds/boom.mp3')
+        self.boom_sound.set_volume(0.2)
+
+        # Додавання до списку снарядів
         Bullet.bullets.append(self)
 
+    # Відмальовування снаряда
     def draw(self, screen):
+        # Розмір та позиція
         x, y = self.pos
         w, h = self.size
 
+        # Координати текстури
         pos = x - w/2, y - h/2
 
+        # Відмальовування текстури
         screen.blit(self.texture, pos)
 
+    # Переміщення снаряда
     def move(self):
+        # Позиція
         x, y = self.pos
 
+        # Вектор руху
         x_offset, y_offset = self.direction
 
+        # Нові координати
         self.pos = x + (x_offset * self.x_speed), y + (y_offset * self.y_speed)
 
+        # Оновлення хітбокса
         self.rect = pygame.Rect(self.pos, self.size)
 
+    # Перевірка на колізію для знищення
     def kill(self):
+        # Перевірка для всіх танків
         for tank in Tank.tanks:
+            # Якщо снаряд попав в танк і це не той танк що вистрілив снарядом
             if self.rect.colliderect(tank.rect) and tank != self.tank:
+                # Зменшити здоров'я
                 tank.health -= 1
 
-                Sound('static/sounds/boom.mp3').play().set_volume(0.4)
+                # Програти звук вибуху від попадання
+                self.boom_sound.play()
 
+                self.tank.score += 100
+
+                # Видалення снаряда
                 Bullet.bullets.remove(self)
                 del self
 
+                # Якщо танк мертвий то видалити з програми
                 if tank.health == 0:
                     Tank.tanks.remove(tank)
                     del tank
+
+                # Вийти з циклу
+                break
                     
 
 # Клас танка
@@ -130,6 +164,17 @@ class Tank():
 
         # Змінна яка перевіряє чи є колізія між гравцем та перешкодою на мапі
         self.is_colliding = False
+
+        # Звук пострілу
+        self.shooting_sound = Sound('static/sounds/shoot.mp3')
+        self.shooting_sound.set_volume(0.5)
+
+        # Звук перезарядки
+        self.reloading_sound = Sound('static/sounds/reload.wav')
+        self.reloading_sound.set_volume(0.5)
+
+        # Балли
+        self.score = 0
 
         Tank.tanks.append(self)
 
@@ -194,9 +239,6 @@ class Tank():
         # Позиція та розмір
         x, y = self.pos
         w, h = self.size
-
-        # Оновлення хітбокса танку
-        self.rect = pygame.Rect(self.pos, self.size)
         
 
         # Анімація повороту
@@ -257,13 +299,17 @@ class Tank():
             self.recharge_tick += 0.01
 
             if self.recharge_tick >= 1:
-                Sound('static/sounds/reload.wav').play().set_volume(0.3)
+                self.reloading_sound.play()
                 self.bullets += 1
                 self.recharge_tick = 0
 
+        # Оновлення хітбокса танку
+        self.rect = pygame.Rect(self.pos, self.size)
 
+
+    # Вистріл
     def shoot(self):
-        Sound('static/sounds/shoot.mp3').play().set_volume(0.5)
+        self.shooting_sound.play()
         size = self.width_procent(1.3020833333333335), self.height_procent(4.62962962962963)
         Bullet(self.pos, size, self)
         self.bullets -= 1
@@ -283,6 +329,7 @@ class Tank():
         # Відмальовування текстури гравця
         screen.blit(self.image, pos)
 
+
 # Клас для гравця
 class Player(Tank):
     # Створення об'єкта Player
@@ -300,7 +347,7 @@ class Player(Tank):
 
         # Звуки стояння
         self.idle_sound = Sound('static/sounds/idle.mp3')
-        self.idle_sound.set_volume(0.2)
+        self.idle_sound.set_volume(0.3)
 
         # Текстурка хп
         self.hp_texture = pygame.image.load('static/images/hp.png').convert_alpha()
@@ -310,6 +357,8 @@ class Player(Tank):
         self.rockets_texture = pygame.image.load('static/images/rockets.png').convert_alpha()
         self.rockets_texture = pygame.transform.scale(self.rockets_texture, (self.width_procent(5.208333333333334), self.height_procent(2.314814814814815)))
         self.rockets_texture = pygame.transform.rotozoom(self.rockets_texture, 45, 1)
+
+        self.FONT = pygame.font.Font('static/font.ttf', int(self.height_procent(5)))
 
     # Взаємодія з гравцем
     def interact(self, event):
@@ -382,3 +431,7 @@ class Player(Tank):
         # Інтерфейс патронів
         for x, index in enumerate(range(self.bullets)):
             screen.blit(self.rockets_texture, (self.width_procent(0.78125) + x*self.width_procent(3.90625), self.height_procent(0.4629629629629629)))
+
+        score = self.FONT.render(str(self.score), True, (255, 255, 255))
+        pos = self.width_procent(50) - score.get_width()/2, self.height_procent(3.62962962962963) - score.get_height()/2
+        screen.blit(score, pos)

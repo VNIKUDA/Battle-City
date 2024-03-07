@@ -3,6 +3,9 @@ import pygame
 from interface_elements import Image
 from player import Bullet
 pygame.init()
+pygame.mixer.init()
+
+Sound = pygame.mixer.Sound
 
 
 # Клас для перешкод
@@ -89,6 +92,7 @@ class Map():
 
         for bullet in bullet_collided:
             Bullet.bullets.remove(bullet)
+            bullet.boom_sound.play()
             del bullet
 
         
