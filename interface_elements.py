@@ -51,6 +51,9 @@ class Button(GraphElement):
         # Створення поле для відстеження натискання на цю кнопку
         self.rect = pygame.Rect(self.pos, self.size)
 
+        self.click_sound = pygame.mixer.Sound('static/sounds/button-click.mp3')
+        self.click_sound.set_volume(0.1)
+
     # Відмальовування кнопки
     def draw(self, screen):
         # Просто відмальовування кнопки
@@ -62,6 +65,6 @@ class Button(GraphElement):
 
     # Запуск функцій в self.observers_functions
     def notify_observers(self):
-        pygame.mixer.Sound('static/sounds/button-click.mp3').play().set_volume(0.1)
+        self.click_sound.play()
         for function in self.observers_functions:
             function()

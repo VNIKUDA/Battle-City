@@ -1,8 +1,8 @@
 # Імпортування модулів та класів
 import pygame, ctypes
 from interface_elements import Button, Image
-from map_elements import Map
-from player import Player, Bullet, Tank
+from game_elements import Map, Bullet, Tank
+from player import Player
 from enemy import spawn_enemies
 pygame.init()
 pygame.mixer.init()
@@ -53,8 +53,14 @@ class MenuScreen(Screen):
         self.quit = Button('static/images/quit.png', (width_procent(1.5625), height_procent(83.33333333333333)), (width_procent(19.53125), height_procent(13.888888888888888)))
 
         # Додавання реакцію на натискання для кожної кнопки
-        self.start.add_observers_function(window.game_screen.change_screen)
+        self.start.add_observers_function(self.restart)
         self.quit.add_observers_function(window.quit)
+
+    def restart(self):
+        Tank.tanks = []
+        Bullet.bullets = []
+        self.window.game_screen = GameScreen(self.window)
+        self.window.game_screen.change_screen()
 
     # Відмальовування меню
     def draw(self):
@@ -87,13 +93,50 @@ class EndScreen(Screen):
     def __init__(self, window):
         super().__init__(window)
 
+        self.bg = Image('static/images/end_bg.png', (0, 0), SIZE)
+
+        self.win = Image('static/images/you_win.png', (width_procent(50) - width_procent(18.22916666666667), height_procent(30) - height_procent(20.83333333333333)), (width_procent(36.45833333333333), height_procent(41.66666666666667)))
+        self.lose = Image('static/images/you_lose.png', (width_procent(50) - width_procent(18.22916666666667), height_procent(30) - height_procent(20.83333333333333)), (width_procent(36.45833333333333), height_procent(41.66666666666667)))
+
+        self.menu = Button('static/images/menu.png', (width_procent(50) - width_procent(6.510416666666667), height_procent(70) - height_procent(5.787037037037037)), (width_procent(13.02083333333333), height_procent(11.57407407407407)))
+        self.restart = Button('static/images/retry.png', (width_procent(50) - width_procent(6.510416666666667), height_procent(85) - height_procent(5.787037037037037)), (width_procent(13.02083333333333), height_procent(11.57407407407407)))
+
+        self.menu.add_observers_function(self.window.menu_screen.change_screen)
+        self.restart.add_observers_function(self.window.menu_screen.restart)
+
+        self.FONT = pygame.font.Font('static/font.ttf',  int(height_procent(5)))
+        self.player = self.window.game_screen.player
+
+
     # Відмальовування налаштувань
     def draw(self):
-        self.window.screen.fill((255, 255, 255))
+        self.window.game_screen.draw()
+        self.bg.draw(self)
+
+        self.player = self.window.game_screen.player
+        self.score = self.FONT.render(f'Score: {self.player.score}', True, (230, 230, 230)).convert_alpha()
+
+        if self.player.score >= 3000:
+            self.win.draw(self)
+        elif self.player.health == 0:
+            self.lose.draw(self)
+
+        self.blit(self.score, (width_procent(50) - self.score.get_width()/2, height_procent(55) - self.score.get_height()/2))
+
+        self.menu.draw(self)
+        self.restart.draw(self)
+
 
     # Обробник подій екрана
     def events(self, event):
-        pass
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = event.pos
+
+            if self.menu.rect.collidepoint(x, y):
+                self.menu.notify_observers()
+
+            if self.restart.rect.collidepoint(x, y):
+                self.restart.notify_observers()
 
 
 # Класс ігрового екрану
@@ -107,9 +150,6 @@ class GameScreen(Screen):
 
         # Гравець
         self.player = Player('static/images/E-100.png', (width_procent(46.09375), height_procent(50)), (width_procent(3.90625), height_procent(13.888888888888888)), 3.75, (width_procent, height_procent))
-
-        # self.tank = Tank('static/images/Tiger-II.png', (width_procent(46.09375), height_procent(88.333333333333332)), (width_procent(3.90625), height_procent(13.88888888888889)), 3, (width_procent, height_procent))
-        # self.tank.update()
 
         # Мапа
         self.map = Map('map.txt', SIZE, (width_procent, height_procent))
@@ -127,45 +167,50 @@ class GameScreen(Screen):
             self.player.update()
             self.map.collision(self.player)
 
-            # Тест смерті гравця
-            # if self.tank.bullets == 1:
-            #     self.tank.shoot()
-
             # Оновлення танків крім гравця
             tanks = tanks[:]
             tanks.remove(self.player)
+
             for tank in tanks:
-                tank.update()
+                tank.update(self.map)
 
             # Оновлення пуль
             for bullet in Bullet.bullets:
                 bullet.move()
                 bullet.kill()
 
-        # Якщо гравець мертвий та екран ще не помінятий
+        # Якщо гравець мертвий то поміняти екран на кінцевий
         elif self.player.health == 0 and self.window.draw == self.draw:
-            self.window.draw = self.window.end_screen.draw
-            self.window.events = self.window.end_screen.events
+            self.window.end_screen.change_screen()
+
+        # Якщо гравцеь досягнув 3000 очків то перейти на кінцевий екран
+        if self.player.score == 3000:
+            self.player.health = 0
+            self.window.end_screen.change_screen()
 
         # Відмальовування фону, мапи та персонажа
         self.bg.draw(self)
         self.map.draw(self)
 
-        if self.player.health != 0:
-            self.player.draw(self)
+        # Відмальовування пуль
+        for bullet in Bullet.bullets:
+            bullet.draw(self)
 
         # Відмальовування танків
         for tank in tanks:
             tank.draw(self)
+            # pygame.draw.rect(self.window.screen, (0, 0, 0), tank.rect)
 
-        # Відмальовування пуль
-        for bullet in Bullet.bullets:
-            bullet.draw(self)
+        if self.player.health != 0:
+            self.player.draw(self)
 
 
     # Обробник подій екрана
     def events(self, event):
         self.player.interact(event)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.window.menu_screen.change_screen()
 
 
 # Класс вікна
@@ -175,20 +220,27 @@ class Window():
         # Створення екрану в повноекраному режимі
         self.screen = pygame.display.set_mode(SIZE, flags = pygame.FULLSCREEN | pygame.DOUBLEBUF)
 
+        # Назва програми та іконка
+        icon = pygame.image.load('static/images/icon.png').convert_alpha()
+        pygame.display.set_icon(icon)
+        pygame.display.set_caption("Battle city HD Remake")
+
         # Створення clock для встановлення частоти оновлення екрану та константи FPS
         self.clock = pygame.time.Clock()
         self.FPS = 60
 
         # Запускання фоновових звуких
-        pygame.mixer.Sound('static\\sounds\\background.mp3').play(-1).set_volume(0.1)
+        bg_sound = pygame.mixer.Sound('static\\sounds\\background.mp3')
+        bg_sound.set_volume(0.1)
+        bg_sound.play(-1)
 
         # Змінна яка відповідає за роботу програми
         self.is_running = True
 
         # Cтворення всіх екранів
         self.game_screen = GameScreen(self)
-        self.end_screen = EndScreen(self)
         self.menu_screen = MenuScreen(self)
+        self.end_screen = EndScreen(self)
 
         # Назначення функцій відмальовування екрану та обробника подій (за замовчуванням - меню)
         self.draw = self.menu_screen.draw
@@ -199,8 +251,6 @@ class Window():
     def update_screen(self):
         pygame.display.update()
         self.clock.tick(self.FPS)
-
-        pygame.display.set_caption(str(self.clock.get_fps()))
 
     # Закриття вікна
     def quit(self):
