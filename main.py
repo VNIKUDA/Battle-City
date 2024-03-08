@@ -223,7 +223,7 @@ class Window():
         # Назва програми та іконка
         icon = pygame.image.load('static/images/icon.png').convert_alpha()
         pygame.display.set_icon(icon)
-        pygame.display.set_caption("Battle city HD Remake")
+        pygame.display.set_caption("Battle-City HD Remake")
 
         # Створення clock для встановлення частоти оновлення екрану та константи FPS
         self.clock = pygame.time.Clock()
