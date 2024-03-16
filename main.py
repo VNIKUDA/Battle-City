@@ -216,6 +216,7 @@ class GameScreen(Screen):
 # Класс вікна
 class Window():
     # Створення об'єкта Window
+    
     def __init__(self):
         # Створення екрану в повноекраному режимі
         self.screen = pygame.display.set_mode(SIZE, flags = pygame.FULLSCREEN | pygame.DOUBLEBUF)
